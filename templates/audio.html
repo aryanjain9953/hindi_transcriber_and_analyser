@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Speech Transcription</title>
+  </head>
+  <body>
+    <h1>Speech Transcription And Sentiment Analysis</h1>
+    <h4>By Agrex.ai</h4>
+    <form id="transcribe-form">
+      <input type="button" value="Record" id="record-button">
+      <input type="button" value="Stop" id="stop-button">
+      <input type="submit" value="Transcribe & Analyse">
+    </form>
+    <br>
+    <audio controls id="audio-player">
+      <source src="" type="audio/mp3">
+      Your browser does not support the audio element.
+    </audio>
+    <br>
+    <textarea rows="10" cols="50" id="transcription" readonly></textarea>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+      const recordButton = document.getElementById('record-button');
+      const stopButton = document.getElementById('stop-button');
+      const audioPlayer = document.getElementById('audio-player');
+      const form = document.getElementById('transcribe-form');
+
+      let chunks = [];
+      let mediaRecorder;
+
+      recordButton.addEventListener('click', () => {
+        navigator.mediaDevices.getUserMedia({audio: true})
+          .then((stream) => {
+            chunks = [];
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.addEventListener('dataavailable', (event) => {
+              chunks.push(event.data);
+            });
+            mediaRecorder.addEventListener('stop', () => {
+              const blob = new Blob(chunks, {type: 'audio/mp3'});
+              const objectURL = URL.createObjectURL(blob);
+              audioPlayer.src = objectURL;
+              const audioFile = new File([blob], 'recording.mp3');
+              const formData = new FormData(form);
+              formData.append('audio_file', audioFile);
+              $.ajax({
+                type: 'POST',
+                url: '/transcribe',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                  $('#transcription').val(data);
+                }
+              });
+            });
+            mediaRecorder.start();
+          });
+      });
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (mediaRecorder) {
+          mediaRecorder.stop();
+        }
+        return false;
+      });
+    </script>
+  </body>
+</html>

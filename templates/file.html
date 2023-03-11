@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Speech Transcription</title>
+  </head>
+  <body>
+    <h1>Speech Transcription And Sentiment Analysis</h1>
+    <h4>By Agrex.ai</h4>
+    <form action="/transcribe" method="POST" enctype="multipart/form-data">
+      <input type="file" name="audio_file" id="audio-file">
+      <input type="submit" value="Transcribe & Analyse">
+    </form>
+    <br>
+	<audio controls id="audio-player">
+		<source src="" type="audio/mp3">
+		Your browser does not support the audio element.
+	</audio>
+    <br>
+    <textarea rows="10" cols="50" id="transcription" readonly></textarea>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+      $('form').submit(function(event) {
+        event.preventDefault();
+        var form_data = new FormData(this);
+        $.ajax({
+          type: 'POST',
+          url: '/transcribe',
+          data: form_data,
+          processData: false,
+          contentType: false,
+          success: function(data) {
+            $('#transcription').val(data);
+          }
+        });
+      });
+
+      const audioFileInput = document.getElementById("audio-file");
+      const audioPlayer = document.getElementById("audio-player");
+
+      audioFileInput.addEventListener("change", function() {
+        const file = this.files[0];
+        const objectURL = URL.createObjectURL(file);
+        audioPlayer.src = objectURL;
+      });
+
+      const sentimentForm = document.getElementById("sentiment-form");
+
+      sentimentForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        const text = document.getElementById("transcription").value;
+        $.ajax({
+          type: 'POST',
+          url: '/analyse_sentiment',
+          data: {text: text},
+          success: function(data) {
+            alert(data);
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
